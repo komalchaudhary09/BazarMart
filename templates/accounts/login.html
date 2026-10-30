@@ -14,7 +14,7 @@
         </div>
 
         <form method="POST" class="space-y-4">
-            {% csrf_auth_token %}{% csrf_token %}
+            {% csrf_token %}
             
             {% if form.non_field_errors %}
                 <div class="p-3 bg-rose-50 text-rose-700 text-xs rounded-lg border border-rose-200">

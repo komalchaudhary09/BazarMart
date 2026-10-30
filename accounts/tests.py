@@ -99,3 +99,19 @@ class AuthenticationAndRBACTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.pending_vendor_profile.refresh_from_db()
         self.assertEqual(self.pending_vendor_profile.status, 'APPROVED')
+
+    def test_login_page_renders_and_authenticates(self):
+        # 1. Test clicking 'Sign In' (GET request to /accounts/login/) renders 200 OK
+        response = self.client.get(reverse('accounts:login'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Welcome Back')
+        self.assertContains(response, 'csrfmiddlewaretoken')
+
+        # 2. Test successful customer login redirects to customer dashboard
+        response = self.client.post(reverse('accounts:login'), {
+            'username': 'test_customer',
+            'password': 'password123'
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('dashboards:dashboard_redirect'))
+
