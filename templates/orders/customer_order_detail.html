@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block title %}Order {{ order.order_number }} - BazaarMart{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+            <a href="{% url 'orders:customer_order_list' %}" class="text-xs text-indigo-600 font-bold hover:underline">&larr; Back to Order History</a>
+            <h1 class="text-2xl font-black text-gray-900 mt-1 flex items-center gap-3">
+                Order <span class="font-mono text-indigo-600">{{ order.order_number }}</span>
+            </h1>
+            <p class="text-xs text-gray-500">Placed on {{ order.created_at|date:"M d, Y, h:i A" }}</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <a href="{% url 'orders:customer_order_invoice' order_number=order.order_number %}" target="_blank"
+               class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-xl transition">
+                <i class="fa-solid fa-file-invoice mr-1.5"></i> Printable Invoice
+            </a>
+            {% if order.order_status == 'PENDING' %}
+                <a href="{% url 'orders:customer_order_cancel' order_number=order.order_number %}"
+                   onclick="return confirm('Are you sure you want to cancel this order?')"
+                   class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold rounded-xl transition">
+                    Cancel Order
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Fulfillment Status Tracker -->
+    <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 mb-8">
+        <h2 class="text-xs font-black text-gray-400 uppercase tracking-wider mb-6">Delivery Progress</h2>
+        
+        <div class="grid grid-cols-4 gap-2 text-center text-xs relative">
+            <!-- Progress Line -->
+            <div class="col-span-4 h-1.5 bg-gray-100 rounded-full mb-4 relative overflow-hidden">
+                <div class="h-full bg-indigo-600 transition-all duration-500
+                    {% if order.order_status == 'PENDING' %}w-1/4
+                    {% elif order.order_status == 'PROCESSING' %}w-2/4
+                    {% elif order.order_status == 'SHIPPED' %}w-3/4
+                    {% elif order.order_status == 'DELIVERED' %}w-full
+                    {% else %}w-0{% endif %}"></div>
+            </div>
+
+            <!-- Steps -->
+            <div class="space-y-1">
+                <div class="w-8 h-8 rounded-full {% if order.order_status != 'CANCELLED' %}bg-indigo-600 text-white{% else %}bg-gray-200 text-gray-500{% endif %} flex items-center justify-center mx-auto text-xs font-bold">
+                    1
+                </div>
+                <p class="font-bold text-gray-900">Order Placed</p>
+            </div>
+            <div class="space-y-1">
+                <div class="w-8 h-8 rounded-full {% if order.order_status in 'PROCESSING,SHIPPED,DELIVERED' %}bg-indigo-600 text-white{% else %}bg-gray-200 text-gray-500{% endif %} flex items-center justify-center mx-auto text-xs font-bold">
+                    2
+                </div>
+                <p class="font-bold text-gray-900">Processing</p>
+            </div>
+            <div class="space-y-1">
+                <div class="w-8 h-8 rounded-full {% if order.order_status in 'SHIPPED,DELIVERED' %}bg-indigo-600 text-white{% else %}bg-gray-200 text-gray-500{% endif %} flex items-center justify-center mx-auto text-xs font-bold">
+                    3
+                </div>
+                <p class="font-bold text-gray-900">Shipped</p>
+            </div>
+            <div class="space-y-1">
+                <div class="w-8 h-8 rounded-full {% if order.order_status == 'DELIVERED' %}bg-emerald-600 text-white{% else %}bg-gray-200 text-gray-500{% endif %} flex items-center justify-center mx-auto text-xs font-bold">
+                    4
+                </div>
+                <p class="font-bold text-gray-900">Delivered</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Items Table -->
+    <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden mb-8">
+        <div class="p-5 border-b border-gray-100 flex items-center justify-between">
+            <h2 class="text-sm font-black text-gray-900 uppercase tracking-wider">Ordered Products</h2>
+            <span class="text-xs text-gray-500">{{ order.items.count }} Line Item{{ order.items.count|pluralize }}</span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-gray-600">
+                <thead class="bg-gray-50 text-gray-700 uppercase tracking-wider text-[11px] border-b border-gray-200 font-extrabold">
+                    <tr>
+                        <th class="py-3.5 px-6">Product</th>
+                        <th class="py-3.5 px-4">Merchant Store</th>
+                        <th class="py-3.5 px-4">Unit Price</th>
+                        <th class="py-3.5 px-4">Qty</th>
+                        <th class="py-3.5 px-4">Fulfillment</th>
+                        <th class="py-3.5 px-6 text-right">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for item in order.items.all %}
+                        <tr>
+                            <td class="py-4 px-6 font-bold text-gray-900">{{ item.product_name }}</td>
+                            <td class="py-4 px-4 font-semibold text-indigo-600">
+                                <a href="{% url 'vendors:vendor_store' slug=item.vendor.slug %}" class="hover:underline">
+                                    {{ item.vendor.store_name }}
+                                </a>
+                            </td>
+                            <td class="py-4 px-4">NPR {{ item.price }}</td>
+                            <td class="py-4 px-4 font-bold">{{ item.quantity }}</td>
+                            <td class="py-4 px-4">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold
+                                    {% if item.status == 'DELIVERED' %}bg-emerald-100 text-emerald-800
+                                    {% elif item.status == 'SHIPPED' %}bg-purple-100 text-purple-800
+                                    {% elif item.status == 'PROCESSING' %}bg-blue-100 text-blue-800
+                                    {% else %}bg-amber-100 text-amber-800{% endif %}">
+                                    {{ item.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 text-right font-black text-gray-900">NPR {{ item.subtotal }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="bg-gray-50 text-gray-900 font-bold">
+                    <tr>
+                        <td colspan="5" class="py-4 px-6 text-right uppercase text-xs">Total Amount Paid / Payable:</td>
+                        <td class="py-4 px-6 text-right text-base text-indigo-600 font-black">NPR {{ order.total_amount }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <!-- Summary Details Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-sm space-y-3">
+            <h3 class="text-xs font-black text-gray-900 uppercase tracking-wider border-b border-gray-100 pb-2">Delivery Address</h3>
+            <p class="font-bold text-sm text-gray-900">{{ order.full_name }}</p>
+            <p class="text-xs text-gray-600">{{ order.shipping_address }}, {{ order.city }}</p>
+            <p class="text-xs text-gray-600"><i class="fa-solid fa-phone mr-1 text-gray-400"></i>{{ order.phone }}</p>
+            {% if order.notes %}
+                <p class="text-xs text-gray-500 italic mt-2">"{{ order.notes }}"</p>
+            {% endif %}
+        </div>
+
+        <div class="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-sm space-y-3">
+            <h3 class="text-xs font-black text-gray-900 uppercase tracking-wider border-b border-gray-100 pb-2">Payment Details</h3>
+            <div class="flex justify-between text-xs">
+                <span class="text-gray-500">Payment Gateway:</span>
+                <span class="font-bold text-gray-900">{{ order.get_payment_method_display }}</span>
+            </div>
+            <div class="flex justify-between text-xs">
+                <span class="text-gray-500">Payment Status:</span>
+                <span class="font-bold {% if order.payment_status == 'COMPLETED' %}text-emerald-600{% else %}text-amber-600{% endif %}">
+                    {{ order.get_payment_status_display }}
+                </span>
+            </div>
+            {% if order.payment_method == 'ESEWA' and order.payment_status == 'PENDING' %}
+                <div class="pt-2">
+                    <a href="{% url 'payments:initiate_esewa' order_number=order.order_number %}"
+                       class="w-full py-2 bg-[#60bb46] hover:bg-[#4e9a38] text-white text-xs font-bold rounded-xl text-center block transition">
+                        Complete Pending eSewa Payment &rarr;
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

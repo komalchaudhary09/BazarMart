@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Connecting to eSewa Secure Payment - BazaarMart{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto my-16 px-4 text-center">
+    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 space-y-6">
+        
+        <!-- Animated Spinner & eSewa Logo -->
+        <div class="relative w-24 h-24 mx-auto flex items-center justify-center">
+            <div class="absolute inset-0 rounded-full border-4 border-emerald-100 border-t-[#60bb46] animate-spin"></div>
+            <div class="w-16 h-16 rounded-2xl bg-[#60bb46] text-white flex items-center justify-center font-black text-2xl shadow-lg">
+                eS
+            </div>
+        </div>
+
+        <div>
+            <h2 class="text-xl font-black text-gray-900">Redirecting to eSewa...</h2>
+            <p class="text-xs text-gray-500 mt-1">Please do not close or refresh this page while we connect to the payment gateway.</p>
+        </div>
+
+        <div class="bg-gray-50 rounded-2xl p-4 text-left text-xs space-y-2 border border-gray-100">
+            <div class="flex justify-between">
+                <span class="text-gray-500">Order Number:</span>
+                <span class="font-bold text-gray-900 font-mono">{{ order.order_number }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-gray-500">Payable Amount:</span>
+                <span class="font-extrabold text-emerald-600">NPR {{ total_amount }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-gray-500">Transaction ID:</span>
+                <span class="font-mono text-[10px] text-gray-400 truncate max-w-[150px]">{{ transaction_uuid }}</span>
+            </div>
+        </div>
+
+        <!-- eSewa v2 Auto-submitting Form -->
+        <form id="esewaForm" method="POST" action="{{ payment_url }}">
+            <input type="hidden" name="amount" value="{{ amount }}">
+            <input type="hidden" name="tax_amount" value="{{ tax_amount }}">
+            <input type="hidden" name="total_amount" value="{{ total_amount }}">
+            <input type="hidden" name="transaction_uuid" value="{{ transaction_uuid }}">
+            <input type="hidden" name="product_code" value="{{ product_code }}">
+            <input type="hidden" name="product_service_charge" value="{{ product_service_charge }}">
+            <input type="hidden" name="product_delivery_charge" value="{{ product_delivery_charge }}">
+            <input type="hidden" name="success_url" value="{{ success_url }}">
+            <input type="hidden" name="failure_url" value="{{ failure_url }}">
+            <input type="hidden" name="signed_field_names" value="{{ signed_field_names }}">
+            <input type="hidden" name="signature" value="{{ signature }}">
+
+            <button type="submit"
+                    class="w-full py-3 bg-[#60bb46] hover:bg-[#4e9a38] text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition">
+                Click here if not redirected automatically
+            </button>
+        </form>
+
+        <a href="{% url 'cart:detail' %}" class="block text-xs text-gray-400 hover:text-gray-600">
+            Cancel and return to cart
+        </a>
+
+    </div>
+</div>
+
+<script>
+    // Automatically submit form after short pause to allow user to see the redirect state
+    window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            document.getElementById('esewaForm').submit();
+        }, 1200);
+    });
+</script>
+{% endblock %}

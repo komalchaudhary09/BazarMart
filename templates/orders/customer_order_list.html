@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}My Orders - BazaarMart{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-3xl font-black text-gray-900 tracking-tight">Order History</h1>
+            <p class="text-xs text-gray-500 mt-1">Track current shipments and view previous purchases.</p>
+        </div>
+        <a href="{% url 'products:product_list' %}"
+           class="inline-flex items-center space-x-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition">
+            <i class="fa-solid fa-bag-shopping"></i>
+            <span>Browse Products</span>
+        </a>
+    </div>
+
+    <!-- Filter Pills -->
+    <div class="flex flex-wrap gap-2 mb-6 text-xs font-bold">
+        <a href="{% url 'orders:customer_order_list' %}"
+           class="px-4 py-2 rounded-xl transition {% if not selected_status %}bg-indigo-600 text-white shadow-sm{% else %}bg-white text-gray-600 border hover:bg-gray-50{% endif %}">
+            All Orders
+        </a>
+        <a href="{% url 'orders:customer_order_list' %}?status=PENDING"
+           class="px-4 py-2 rounded-xl transition {% if selected_status == 'PENDING' %}bg-amber-600 text-white shadow-sm{% else %}bg-white text-gray-600 border hover:bg-gray-50{% endif %}">
+            Pending
+        </a>
+        <a href="{% url 'orders:customer_order_list' %}?status=PROCESSING"
+           class="px-4 py-2 rounded-xl transition {% if selected_status == 'PROCESSING' %}bg-blue-600 text-white shadow-sm{% else %}bg-white text-gray-600 border hover:bg-gray-50{% endif %}">
+            Processing
+        </a>
+        <a href="{% url 'orders:customer_order_list' %}?status=SHIPPED"
+           class="px-4 py-2 rounded-xl transition {% if selected_status == 'SHIPPED' %}bg-purple-600 text-white shadow-sm{% else %}bg-white text-gray-600 border hover:bg-gray-50{% endif %}">
+            Shipped
+        </a>
+        <a href="{% url 'orders:customer_order_list' %}?status=DELIVERED"
+           class="px-4 py-2 rounded-xl transition {% if selected_status == 'DELIVERED' %}bg-emerald-600 text-white shadow-sm{% else %}bg-white text-gray-600 border hover:bg-gray-50{% endif %}">
+            Delivered
+        </a>
+    </div>
+
+    <!-- Orders Cards / List -->
+    {% if orders %}
+        <div class="space-y-4">
+            {% for order in orders %}
+                <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 hover:shadow-md transition">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-4">
+                        <div>
+                            <div class="flex items-center space-x-3">
+                                <span class="font-mono font-bold text-sm text-gray-900">{{ order.order_number }}</span>
+                                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold
+                                    {% if order.order_status == 'DELIVERED' %}bg-emerald-100 text-emerald-800
+                                    {% elif order.order_status == 'SHIPPED' %}bg-purple-100 text-purple-800
+                                    {% elif order.order_status == 'PROCESSING' %}bg-blue-100 text-blue-800
+                                    {% elif order.order_status == 'CANCELLED' %}bg-rose-100 text-rose-800
+                                    {% else %}bg-amber-100 text-amber-800{% endif %}">
+                                    {{ order.get_order_status_display }}
+                                </span>
+                            </div>
+                            <span class="text-xs text-gray-400 mt-1 block">Placed on {{ order.created_at|date:"M d, Y" }}</span>
+                        </div>
+
+                        <div class="flex items-center space-x-3">
+                            <div class="text-right">
+                                <span class="text-[11px] text-gray-400 block">Total Amount</span>
+                                <span class="text-base font-black text-indigo-600">NPR {{ order.total_amount }}</span>
+                            </div>
+                            <a href="{% url 'orders:customer_order_detail' order_number=order.order_number %}"
+                               class="px-4 py-2 bg-gray-100 hover:bg-indigo-600 hover:text-white text-gray-800 text-xs font-bold rounded-xl transition">
+                                Details &rarr;
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Items Preview -->
+                    <div class="pt-4 flex flex-wrap gap-2 text-xs text-gray-600">
+                        {% for item in order.items.all %}
+                            <span class="px-3 py-1 bg-gray-50 rounded-lg border text-gray-700">
+                                {{ item.quantity }}x <strong>{{ item.product_name }}</strong> ({{ item.vendor.store_name }})
+                            </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if orders.has_other_pages %}
+            <div class="mt-8 flex justify-center space-x-1">
+                {% if orders.has_previous %}
+                    <a href="?page={{ orders.previous_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}"
+                       class="px-3 py-2 border rounded-xl text-xs font-semibold bg-white hover:bg-gray-50">Previous</a>
+                {% endif %}
+                <span class="px-3 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white">{{ orders.number }}</span>
+                {% if orders.has_next %}
+                    <a href="?page={{ orders.next_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}"
+                       class="px-3 py-2 border rounded-xl text-xs font-semibold bg-white hover:bg-gray-50">Next</a>
+                {% endif %}
+            </div>
+        {% endif %}
+
+    {% else %}
+        <div class="bg-white rounded-2xl border border-gray-200/80 p-12 text-center max-w-md mx-auto">
+            <i class="fa-solid fa-box-archive text-4xl text-gray-300 mb-3 block"></i>
+            <h3 class="text-base font-bold text-gray-900 mb-1">No orders found</h3>
+            <p class="text-xs text-gray-500 mb-6">You haven't placed any orders matching this criteria yet.</p>
+            <a href="{% url 'products:product_list' %}" class="px-5 py-2.5 bg-indigo-600 text-white font-bold text-xs rounded-xl shadow-sm">
+                Explore Marketplace
+            </a>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

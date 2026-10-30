@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Failed or Cancelled - BazaarMart{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto my-16 px-4 text-center">
+    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 space-y-6">
+        
+        <div class="w-16 h-16 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto">
+            <i class="fa-solid fa-circle-xmark text-3xl"></i>
+        </div>
+
+        <div>
+            <h2 class="text-2xl font-black text-gray-900">Payment Not Completed</h2>
+            <p class="text-xs text-gray-500 mt-2 leading-relaxed">
+                Your eSewa transaction was cancelled or could not be verified. Your card/wallet has not been debited.
+            </p>
+        </div>
+
+        <div class="bg-gray-50 rounded-2xl p-4 text-xs text-gray-600 text-left space-y-2">
+            <p class="font-bold text-gray-900">Next Steps:</p>
+            <ul class="list-disc pl-4 space-y-1">
+                <li>You can retry paying via eSewa with another attempt.</li>
+                <li>Or select Cash on Delivery (COD) to pay upon delivery.</li>
+            </ul>
+        </div>
+
+        <div class="flex flex-col space-y-2">
+            <a href="{% url 'cart:detail' %}"
+               class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition">
+                Return to Cart & Retry
+            </a>
+            <a href="{% url 'products:product_list' %}"
+               class="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition">
+                Browse Marketplace
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

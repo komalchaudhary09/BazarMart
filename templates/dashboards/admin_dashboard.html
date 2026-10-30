@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Control Dashboard - BazaarMart{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+                <i class="fa-solid fa-shield-halved mr-1.5"></i> Superuser & Platform Administrator
+            </span>
+            <h1 class="text-3xl font-black text-gray-900 tracking-tight mt-1">Platform Control Center</h1>
+            <p class="text-xs text-gray-500">Live operational overview of marketplace vendors, sales, and catalog.</p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{% url 'dashboards:admin_vendors' %}" class="px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-800 text-xs font-bold rounded-xl shadow-sm transition">
+                <i class="fa-solid fa-users-gear mr-1.5 text-indigo-600"></i> Manage Vendors
+            </a>
+            <a href="{% url 'products:admin_category_list' %}" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm transition">
+                <i class="fa-solid fa-layer-group mr-1.5"></i> Categories
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Metric Cards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <!-- Revenue -->
+        <div class="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Gross Platform Sales</p>
+                <p class="text-2xl font-black text-gray-900 mt-1">NPR {{ total_sales }}</p>
+                <span class="text-[11px] text-emerald-600 font-semibold mt-1 inline-block">
+                    <i class="fa-solid fa-circle-check mr-1"></i> Paid Orders
+                </span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-wallet"></i>
+            </div>
+        </div>
+
+        <!-- Total Orders -->
+        <div class="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Orders</p>
+                <p class="text-2xl font-black text-gray-900 mt-1">{{ total_orders }}</p>
+                <a href="{% url 'orders:admin_order_list' %}" class="text-[11px] text-indigo-600 font-bold hover:underline mt-1 inline-block">
+                    View all orders &rarr;
+                </a>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-cart-flatbed"></i>
+            </div>
+        </div>
+
+        <!-- Active / Pending Vendors -->
+        <div class="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Marketplace Vendors</p>
+                <p class="text-2xl font-black text-gray-900 mt-1">{{ total_vendors }} Active</p>
+                {% if pending_vendors > 0 %}
+                    <span class="text-[11px] text-amber-600 font-bold mt-1 inline-block">
+                        <i class="fa-solid fa-bell mr-1 animate-bounce"></i> {{ pending_vendors }} Pending Approval
+                    </span>
+                {% else %}
+                    <span class="text-[11px] text-gray-400 mt-1 inline-block">All caught up</span>
+                {% endif %}
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-store"></i>
+            </div>
+        </div>
+
+        <!-- Listed Products -->
+        <div class="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Listed Products</p>
+                <p class="text-2xl font-black text-gray-900 mt-1">{{ total_products }}</p>
+                <span class="text-[11px] text-gray-500 font-medium mt-1 inline-block">
+                    {{ total_customers }} Registered Buyers
+                </span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-boxes-stacked"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Vendor Approvals Section -->
+    {% if pending_vendor_list %}
+        <div class="bg-white rounded-2xl border-2 border-amber-300 shadow-sm overflow-hidden">
+            <div class="p-5 bg-amber-50/70 border-b border-amber-200 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <span class="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center text-xs font-bold">
+                        <i class="fa-solid fa-user-clock"></i>
+                    </span>
+                    <div>
+                        <h2 class="text-sm font-black text-gray-900 uppercase tracking-wider">Pending Vendor Applications</h2>
+                        <p class="text-xs text-amber-900">Merchants awaiting your authorization before they can list products.</p>
+                    </div>
+                </div>
+                <a href="{% url 'dashboards:admin_vendors' %}?status=PENDING" class="text-xs font-bold text-amber-800 hover:underline">
+                    View All ({{ pending_vendors }})
+                </a>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-gray-600">
+                    <thead class="bg-gray-50 text-gray-700 uppercase tracking-wider text-[11px] border-b border-gray-200 font-extrabold">
+                        <tr>
+                            <th class="py-3 px-4">Store Name</th>
+                            <th class="py-3 px-4">Owner Account</th>
+                            <th class="py-3 px-4">Phone / Location</th>
+                            <th class="py-3 px-4">Application Date</th>
+                            <th class="py-3 px-4 text-right">Review Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        {% for ven in pending_vendor_list %}
+                            <tr class="hover:bg-amber-50/30 transition">
+                                <td class="py-3.5 px-4 font-bold text-gray-900">{{ ven.store_name }}</td>
+                                <td class="py-3.5 px-4">{{ ven.user.username }} ({{ ven.user.email }})</td>
+                                <td class="py-3.5 px-4">{{ ven.phone|default:ven.user.phone|default:"-" }}</td>
+                                <td class="py-3.5 px-4 text-gray-500">{{ ven.created_at|date:"M d, Y" }}</td>
+                                <td class="py-3.5 px-4 text-right space-x-2">
+                                    <a href="{% url 'vendors:admin_approve' vendor_id=ven.pk %}"
+                                       onclick="return confirm('Approve vendor {{ ven.store_name }}?')"
+                                       class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition inline-block">
+                                        <i class="fa-solid fa-check mr-1"></i> Approve
+                                    </a>
+                                    <form action="{% url 'vendors:admin_reject' vendor_id=ven.pk %}" method="POST" class="inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="rejection_reason" value="Application did not meet marketplace requirements.">
+                                        <button type="submit" onclick="return confirm('Reject vendor application?')"
+                                                class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs rounded-lg transition">
+                                            <i class="fa-solid fa-xmark mr-1"></i> Reject
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Grid: Recent Orders & Low Stock Warning -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Recent Orders (8 Cols) -->
+        <div class="lg:col-span-8 bg-white rounded-2xl shadow-sm border border-gray-200/80 overflow-hidden">
+            <div class="p-5 border-b border-gray-100 flex items-center justify-between">
+                <h2 class="text-sm font-black text-gray-900 uppercase tracking-wider">Recent Orders</h2>
+                <a href="{% url 'orders:admin_order_list' %}" class="text-xs font-bold text-indigo-600 hover:underline">
+                    View All Orders &rarr;
+                </a>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-gray-600">
+                    <thead class="bg-gray-50 text-gray-700 uppercase tracking-wider text-[11px] border-b border-gray-200 font-extrabold">
+                        <tr>
+                            <th class="py-3.5 px-4">Order #</th>
+                            <th class="py-3.5 px-4">Customer</th>
+                            <th class="py-3.5 px-4">Amount</th>
+                            <th class="py-3.5 px-4">Payment</th>
+                            <th class="py-3.5 px-4">Fulfillment</th>
+                            <th class="py-3.5 px-4 text-right">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        {% for ord in recent_orders %}
+                            <tr class="hover:bg-gray-50/70 transition">
+                                <td class="py-3.5 px-4 font-mono font-bold text-gray-900">{{ ord.order_number }}</td>
+                                <td class="py-3.5 px-4">{{ ord.full_name }}</td>
+                                <td class="py-3.5 px-4 font-black text-gray-900">NPR {{ ord.total_amount }}</td>
+                                <td class="py-3.5 px-4">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold
+                                        {% if ord.payment_status == 'COMPLETED' %}bg-emerald-100 text-emerald-800
+                                        {% else %}bg-amber-100 text-amber-800{% endif %}">
+                                        {{ ord.get_payment_method_display }}
+                                    </span>
+                                </td>
+                                <td class="py-3.5 px-4">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold
+                                        {% if ord.order_status == 'DELIVERED' %}bg-emerald-100 text-emerald-800
+                                        {% elif ord.order_status == 'SHIPPED' %}bg-purple-100 text-purple-800
+                                        {% elif ord.order_status == 'PROCESSING' %}bg-blue-100 text-blue-800
+                                        {% else %}bg-amber-100 text-amber-800{% endif %}">
+                                        {{ ord.get_order_status_display }}
+                                    </span>
+                                </td>
+                                <td class="py-3.5 px-4 text-right">
+                                    <a href="{% url 'orders:admin_order_detail' order_number=ord.order_number %}" class="font-bold text-indigo-600 hover:underline">
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="6" class="py-6 text-center text-gray-400">No recent orders.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Low Stock Warning (4 Cols) -->
+        <div class="lg:col-span-4 bg-white rounded-2xl shadow-sm border border-gray-200/80 p-5 space-y-4">
+            <div class="flex items-center space-x-2 border-b border-gray-100 pb-3">
+                <i class="fa-solid fa-triangle-exclamation text-rose-500"></i>
+                <h2 class="text-sm font-black text-gray-900 uppercase tracking-wider">Inventory Alerts</h2>
+            </div>
+            
+            <div class="space-y-3">
+                {% for prod in low_stock_products %}
+                    <div class="flex items-center justify-between text-xs p-2.5 rounded-xl bg-gray-50 border border-gray-100">
+                        <div class="min-w-0 pr-2">
+                            <p class="font-bold text-gray-900 truncate">{{ prod.name }}</p>
+                            <p class="text-[10px] text-gray-400">{{ prod.vendor.store_name }}</p>
+                        </div>
+                        <span class="px-2 py-0.5 rounded font-black text-[10px] shrink-0
+                            {% if prod.stock == 0 %}bg-rose-100 text-rose-700{% else %}bg-amber-100 text-amber-700{% endif %}">
+                            {{ prod.stock }} units
+                        </span>
+                    </div>
+                {% empty %}
+                    <p class="text-xs text-gray-400 text-center py-4">All catalog items have healthy stock levels.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

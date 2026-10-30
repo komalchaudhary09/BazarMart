@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}Inspect Order {{ order.order_number }} - Admin - BazaarMart{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+            <a href="{% url 'orders:admin_order_list' %}" class="text-xs text-indigo-600 font-bold hover:underline">&larr; Back to All Orders</a>
+            <h1 class="text-2xl font-black text-gray-900 mt-1">Order {{ order.order_number }}</h1>
+            <p class="text-xs text-gray-500">Customer: {{ order.user.username }} ({{ order.email }})</p>
+        </div>
+        <a href="{% url 'orders:customer_order_invoice' order_number=order.order_number %}" target="_blank"
+           class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-xl transition">
+            <i class="fa-solid fa-print mr-1.5"></i> View Tax Invoice
+        </a>
+    </div>
+
+    <!-- Admin Status Controls Box -->
+    <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 mb-8">
+        <h2 class="text-sm font-black text-indigo-950 uppercase tracking-wider mb-4">
+            <i class="fa-solid fa-sliders mr-2"></i> Update Order & Payment Status
+        </h2>
+        <form method="POST" class="flex flex-wrap items-center gap-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Global Order Status</label>
+                <select name="order_status" class="text-xs border rounded-xl px-3 py-2 bg-white font-semibold">
+                    <option value="PENDING" {% if order.order_status == 'PENDING' %}selected{% endif %}>Pending</option>
+                    <option value="PROCESSING" {% if order.order_status == 'PROCESSING' %}selected{% endif %}>Processing</option>
+                    <option value="SHIPPED" {% if order.order_status == 'SHIPPED' %}selected{% endif %}>Shipped</option>
+                    <option value="DELIVERED" {% if order.order_status == 'DELIVERED' %}selected{% endif %}>Delivered</option>
+                    <option value="CANCELLED" {% if order.order_status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Payment Status</label>
+                <select name="payment_status" class="text-xs border rounded-xl px-3 py-2 bg-white font-semibold">
+                    <option value="PENDING" {% if order.payment_status == 'PENDING' %}selected{% endif %}>Pending</option>
+                    <option value="COMPLETED" {% if order.payment_status == 'COMPLETED' %}selected{% endif %}>Completed</option>
+                    <option value="FAILED" {% if order.payment_status == 'FAILED' %}selected{% endif %}>Failed</option>
+                    <option value="REFUNDED" {% if order.payment_status == 'REFUNDED' %}selected{% endif %}>Refunded</option>
+                </select>
+            </div>
+
+            <div class="pt-5">
+                <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow transition">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Items Table -->
+    <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden mb-8">
+        <div class="p-5 border-b border-gray-100">
+            <h2 class="text-sm font-black text-gray-900 uppercase tracking-wider">Order Items & Assigned Vendors</h2>
+        </div>
+        <table class="w-full text-left text-xs text-gray-600">
+            <thead class="bg-gray-50 text-gray-700 uppercase tracking-wider text-[11px] border-b border-gray-200 font-extrabold">
+                <tr>
+                    <th class="py-3 px-5">Item</th>
+                    <th class="py-3 px-4">Vendor</th>
+                    <th class="py-3 px-4">Price</th>
+                    <th class="py-3 px-4">Qty</th>
+                    <th class="py-3 px-4">Fulfillment Status</th>
+                    <th class="py-3 px-5 text-right">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for item in order.items.all %}
+                    <tr>
+                        <td class="py-3 px-5 font-bold text-gray-900">{{ item.product_name }}</td>
+                        <td class="py-3 px-4 font-semibold text-indigo-600">{{ item.vendor.store_name }}</td>
+                        <td class="py-3 px-4">NPR {{ item.price }}</td>
+                        <td class="py-3 px-4 font-bold">{{ item.quantity }}</td>
+                        <td class="py-3 px-4">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700">{{ item.get_status_display }}</span>
+                        </td>
+                        <td class="py-3 px-5 text-right font-black text-gray-900">NPR {{ item.subtotal }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Transactions Log -->
+    {% if order.transactions.all %}
+        <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden mb-8">
+            <div class="p-5 border-b border-gray-100">
+                <h2 class="text-sm font-black text-gray-900 uppercase tracking-wider">Payment Transaction History</h2>
+            </div>
+            <table class="w-full text-left text-xs text-gray-600">
+                <thead class="bg-gray-50 text-gray-700 uppercase tracking-wider text-[11px] border-b border-gray-200 font-extrabold">
+                    <tr>
+                        <th class="py-3 px-5">Transaction UUID</th>
+                        <th class="py-3 px-4">Gateway</th>
+                        <th class="py-3 px-4">Amount</th>
+                        <th class="py-3 px-4">Ref Code</th>
+                        <th class="py-3 px-4">Status</th>
+                        <th class="py-3 px-5 text-right">Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for tx in order.transactions.all %}
+                        <tr>
+                            <td class="py-3 px-5 font-mono text-[11px] text-gray-900">{{ tx.transaction_uuid }}</td>
+                            <td class="py-3 px-4 font-bold">{{ tx.get_payment_method_display }}</td>
+                            <td class="py-3 px-4 font-black">NPR {{ tx.amount }}</td>
+                            <td class="py-3 px-4 font-mono">{{ tx.ref_id|default:"-" }}</td>
+                            <td class="py-3 px-4 font-bold">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] {% if tx.status == 'SUCCESS' %}bg-emerald-100 text-emerald-800{% else %}bg-rose-100 text-rose-800{% endif %}">
+                                    {{ tx.status }}
+                                </span>
+                            </td>
+                            <td class="py-3 px-5 text-right text-gray-400">{{ tx.created_at|date:"M d, Y h:i A" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ action }} Product - Vendor Portal - BazaarMart{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto my-10 px-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-gray-100 pb-5 mb-6">
+            <div>
+                <a href="{% url 'products:vendor_product_list' %}" class="text-xs text-indigo-600 font-bold hover:underline">&larr; Back to Products</a>
+                <h1 class="text-2xl font-black text-gray-900 mt-1">{{ action }} Product</h1>
+                <p class="text-xs text-gray-500">Provide accurate details, pricing, and high quality photos.</p>
+            </div>
+            <span class="text-xs font-bold px-3 py-1 bg-indigo-50 text-indigo-700 rounded-lg">
+                Vendor: {{ user.vendor_profile.store_name }}
+            </span>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+
+            {% if form.errors %}
+                <div class="p-4 bg-rose-50 text-rose-700 text-xs rounded-xl border border-rose-200">
+                    <p class="font-bold mb-1">Please correct the following errors:</p>
+                    <ul class="list-disc pl-4 space-y-1">
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                                <li>{{ field.label }}: {{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Product Title *</label>
+                    {{ form.name }}
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Category *</label>
+                    {{ form.category }}
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Product Description *</label>
+                {{ form.description }}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Regular Price (NPR) *</label>
+                    {{ form.price }}
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Discount Price (NPR)</label>
+                    {{ form.discount_price }}
+                    <span class="text-[10px] text-gray-400 mt-0.5 block">Leave blank if not on sale</span>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Available Stock (Units) *</label>
+                    {{ form.stock }}
+                </div>
+            </div>
+
+            <!-- Image Uploads -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2 border-t border-gray-100">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Main Product Image</label>
+                    {{ form.image }}
+                    {% if product and product.image %}
+                        <div class="mt-2 flex items-center space-x-2">
+                            <span class="text-[11px] text-gray-400">Current:</span>
+                            <img src="{{ product.image.url }}" class="w-10 h-10 object-cover rounded-lg border">
+                        </div>
+                    {% endif %}
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Additional Gallery Photos</label>
+                    <input type="file" name="gallery_images" multiple
+                           class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                    <span class="text-[10px] text-gray-400 mt-0.5 block">You can select multiple images</span>
+                </div>
+            </div>
+
+            <!-- Checkboxes -->
+            <div class="flex items-center space-x-6 pt-2 border-t border-gray-100">
+                <label class="flex items-center space-x-2 text-xs font-bold text-gray-700 cursor-pointer">
+                    {{ form.is_active }}
+                    <span>Active & Available in Marketplace</span>
+                </label>
+                <label class="flex items-center space-x-2 text-xs font-bold text-gray-700 cursor-pointer">
+                    {{ form.featured }}
+                    <span>Feature on Storefront</span>
+                </label>
+            </div>
+
+            <div class="flex justify-end space-x-3 pt-6 border-t border-gray-100">
+                <a href="{% url 'products:vendor_product_list' %}"
+                   class="px-5 py-2.5 text-xs font-bold text-gray-600 hover:text-gray-900 border rounded-xl">
+                    Cancel
+                </a>
+                <button type="submit"
+                        class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition">
+                    Save Product
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

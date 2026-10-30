@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}User Profile - BazaarMart{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto my-12 px-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        
+        <!-- Header Banner -->
+        <div class="bg-gradient-to-r from-indigo-700 to-violet-700 px-8 py-6 text-white flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                {% if user.avatar %}
+                    <img src="{{ user.avatar.url }}" alt="{{ user.username }}" class="w-16 h-16 rounded-full object-cover border-2 border-white shadow">
+                {% else %}
+                    <div class="w-16 h-16 rounded-full bg-white/20 text-white flex items-center justify-center font-bold text-2xl border-2 border-white">
+                        {{ user.username|slice:":1"|upper }}
+                    </div>
+                {% endif %}
+                <div>
+                    <h2 class="text-xl font-black">{{ user.get_full_name|default:user.username }}</h2>
+                    <p class="text-xs text-indigo-200">Role: <span class="font-bold uppercase tracking-wider text-white">{{ user.get_role_display }}</span></p>
+                </div>
+            </div>
+            <div>
+                <a href="{% url 'dashboards:dashboard_redirect' %}" class="text-xs font-bold px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition">
+                    <i class="fa-solid fa-gauge mr-1"></i> Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Form Body -->
+        <form method="POST" enctype="multipart/form-data" class="p-8 space-y-5">
+            {% csrf_token %}
+
+            {% if form.errors %}
+                <div class="p-3 bg-rose-50 text-rose-700 text-xs rounded-xl border border-rose-200">
+                    Please correct the errors indicated below.
+                </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">First Name</label>
+                    {{ form.first_name }}
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Last Name</label>
+                    {{ form.last_name }}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Email Address</label>
+                    {{ form.email }}
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Contact Phone</label>
+                    {{ form.phone }}
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Shipping / Home Address</label>
+                {{ form.address }}
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Change Avatar</label>
+                {{ form.avatar }}
+            </div>
+
+            <div class="pt-4 flex justify-end space-x-3">
+                <a href="{% url 'dashboards:dashboard_redirect' %}" class="px-5 py-2.5 text-sm font-semibold text-gray-600 hover:text-gray-900 border rounded-xl">
+                    Cancel
+                </a>
+                <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-md transition">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

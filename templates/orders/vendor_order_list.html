@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}Shop Orders Fulfillment - Vendor Portal - BazaarMart{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+            <div class="flex items-center space-x-2">
+                <a href="{% url 'dashboards:vendor_dashboard' %}" class="text-xs text-indigo-600 font-bold hover:underline">&larr; Vendor Dashboard</a>
+            </div>
+            <h1 class="text-2xl font-black text-gray-900 mt-1">Shop Fulfillment Orders</h1>
+            <p class="text-xs text-gray-500">Track and fulfill customer orders containing items from your store.</p>
+        </div>
+    </div>
+
+    <!-- Status Filter Tabs -->
+    <div class="flex flex-wrap gap-2 mb-6 text-xs font-bold">
+        <a href="{% url 'orders:vendor_order_list' %}"
+           class="px-4 py-2 rounded-xl transition {% if not selected_status %}bg-indigo-600 text-white shadow-sm{% else %}bg-white text-gray-600 border hover:bg-gray-50{% endif %}">
+            All Items
+        </a>
+        <a href="{% url 'orders:vendor_order_list' %}?status=PENDING"
+           class="px-4 py-2 rounded-xl transition {% if selected_status == 'PENDING' %}bg-amber-600 text-white shadow-sm{% else %}bg-white text-gray-600 border hover:bg-gray-50{% endif %}">
+            Pending Fulfillment
+        </a>
+        <a href="{% url 'orders:vendor_order_list' %}?status=PROCESSING"
+           class="px-4 py-2 rounded-xl transition {% if selected_status == 'PROCESSING' %}bg-blue-600 text-white shadow-sm{% else %}bg-white text-gray-600 border hover:bg-gray-50{% endif %}">
+            Processing
+        </a>
+        <a href="{% url 'orders:vendor_order_list' %}?status=SHIPPED"
+           class="px-4 py-2 rounded-xl transition {% if selected_status == 'SHIPPED' %}bg-purple-600 text-white shadow-sm{% else %}bg-white text-gray-600 border hover:bg-gray-50{% endif %}">
+            Shipped
+        </a>
+        <a href="{% url 'orders:vendor_order_list' %}?status=DELIVERED"
+           class="px-4 py-2 rounded-xl transition {% if selected_status == 'DELIVERED' %}bg-emerald-600 text-white shadow-sm{% else %}bg-white text-gray-600 border hover:bg-gray-50{% endif %}">
+            Delivered
+        </a>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200/80 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-gray-600">
+                <thead class="bg-gray-50 text-gray-700 uppercase tracking-wider text-[11px] border-b border-gray-200 font-extrabold">
+                    <tr>
+                        <th class="py-3.5 px-4">Order #</th>
+                        <th class="py-3.5 px-4">Customer</th>
+                        <th class="py-3.5 px-4">Product</th>
+                        <th class="py-3.5 px-4">Quantity</th>
+                        <th class="py-3.5 px-4">Subtotal</th>
+                        <th class="py-3.5 px-4">Payment</th>
+                        <th class="py-3.5 px-4">Fulfillment Status</th>
+                        <th class="py-3.5 px-4 text-right">Update Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for item in order_items %}
+                        <tr class="hover:bg-gray-50/70 transition">
+                            <td class="py-3.5 px-4 font-mono font-bold text-gray-900">
+                                {{ item.order.order_number }}
+                                <span class="block text-[10px] text-gray-400 font-sans">{{ item.order.created_at|date:"M d, Y" }}</span>
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <span class="font-bold text-gray-900 block">{{ item.order.full_name }}</span>
+                                <span class="text-[11px] text-gray-400">{{ item.order.city }}</span>
+                            </td>
+                            <td class="py-3.5 px-4 font-bold text-gray-900">
+                                {{ item.product_name }}
+                            </td>
+                            <td class="py-3.5 px-4 font-bold">
+                                {{ item.quantity }}
+                            </td>
+                            <td class="py-3.5 px-4 font-black text-indigo-600">
+                                NPR {{ item.subtotal }}
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold
+                                    {% if item.order.payment_status == 'COMPLETED' %}bg-emerald-100 text-emerald-800
+                                    {% else %}bg-amber-100 text-amber-800{% endif %}">
+                                    {{ item.order.get_payment_method_display }}
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold
+                                    {% if item.status == 'DELIVERED' %}bg-emerald-100 text-emerald-800
+                                    {% elif item.status == 'SHIPPED' %}bg-purple-100 text-purple-800
+                                    {% elif item.status == 'PROCESSING' %}bg-blue-100 text-blue-800
+                                    {% elif item.status == 'CANCELLED' %}bg-rose-100 text-rose-800
+                                    {% else %}bg-amber-100 text-amber-800{% endif %}">
+                                    {{ item.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-4 text-right">
+                                <form action="{% url 'orders:vendor_order_item_update' item_id=item.id %}" method="POST" class="inline-flex items-center space-x-1">
+                                    {% csrf_token %}
+                                    <select name="status" class="text-[11px] border border-gray-200 rounded-lg px-2 py-1 bg-gray-50 focus:bg-white focus:outline-none">
+                                        <option value="PENDING" {% if item.status == 'PENDING' %}selected{% endif %}>Pending</option>
+                                        <option value="PROCESSING" {% if item.status == 'PROCESSING' %}selected{% endif %}>Processing</option>
+                                        <option value="SHIPPED" {% if item.status == 'SHIPPED' %}selected{% endif %}>Shipped</option>
+                                        <option value="DELIVERED" {% if item.status == 'DELIVERED' %}selected{% endif %}>Delivered</option>
+                                        <option value="CANCELLED" {% if item.status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+                                    </select>
+                                    <button type="submit" class="p-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs" title="Save status">
+                                        <i class="fa-solid fa-check"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="8" class="py-8 text-center text-gray-400">
+                                No fulfillment orders found.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if order_items.has_other_pages %}
+            <div class="p-4 border-t border-gray-100 flex items-center justify-between">
+                <span class="text-xs text-gray-500">Page {{ order_items.number }} of {{ order_items.paginator.num_pages }}</span>
+                <div class="space-x-1">
+                    {% if order_items.has_previous %}
+                        <a href="?page={{ order_items.previous_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}" class="px-3 py-1.5 border rounded-lg text-xs font-semibold hover:bg-gray-50">Previous</a>
+                    {% endif %}
+                    {% if order_items.has_next %}
+                        <a href="?page={{ order_items.next_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}" class="px-3 py-1.5 border rounded-lg text-xs font-semibold hover:bg-gray-50">Next</a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

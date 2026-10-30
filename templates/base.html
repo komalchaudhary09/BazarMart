@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BazaarMart - Multi-Vendor Marketplace{% endblock %}</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4f46e5',
+                        primaryHover: '#4338ca',
+                        esewaGreen: '#60bb46',
+                        esewaHover: '#4e9a38',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        [x-cloak] { display: none !important; }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col antialiased">
+
+    <!-- Top Notification Banner -->
+    <div class="bg-indigo-900 text-indigo-100 text-xs py-1.5 px-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <span><i class="fa-solid fa-truck-fast mr-1 text-indigo-300"></i> Fast Delivery Nationwide</span>
+                <span class="hidden sm:inline text-indigo-400">|</span>
+                <span class="hidden sm:inline"><i class="fa-solid fa-shield-halved mr-1 text-emerald-400"></i> Secure Payments via eSewa & COD</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                {% if not user.is_authenticated or user.role == 'CUSTOMER' %}
+                    <a href="{% url 'accounts:register_vendor' %}" class="font-semibold text-amber-300 hover:text-white transition">
+                        <i class="fa-solid fa-shop mr-1"></i> Sell on BazaarMart
+                    </a>
+                {% endif %}
+                <a href="{% url 'vendors:vendor_list' %}" class="hover:text-white transition">Explore Vendors</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+
+                <!-- Logo -->
+                <div class="flex items-center space-x-8">
+                    <a href="{% url 'products:product_list' %}" class="flex items-center space-x-2">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-100">
+                            <i class="fa-solid fa-bag-shopping text-xl"></i>
+                        </div>
+                        <span class="text-2xl font-black tracking-tight text-gray-900">Bazaar<span class="text-indigo-600">Mart</span></span>
+                    </a>
+
+                    <!-- Category Dropdown -->
+                    <div class="relative group hidden lg:block">
+                        <button class="flex items-center space-x-1.5 text-sm font-semibold text-gray-700 hover:text-indigo-600 py-2">
+                            <i class="fa-solid fa-bars text-indigo-600"></i>
+                            <span>Categories</span>
+                            <i class="fa-solid fa-chevron-down text-xs ml-1 text-gray-400 group-hover:rotate-180 transition-transform"></i>
+                        </button>
+                        <div class="absolute left-0 mt-1 w-56 bg-white border border-gray-100 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 py-2">
+                            {% for cat in nav_categories %}
+                                <a href="{% url 'products:product_list' %}?category={{ cat.slug }}" class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 font-medium">
+                                    <i class="fa-solid fa-tag text-xs text-indigo-400 mr-2.5"></i>
+                                    {{ cat.name }}
+                                </a>
+                            {% empty %}
+                                <span class="px-4 py-2 text-xs text-gray-400">No categories found</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="flex-1 max-w-xl mx-4 sm:mx-8">
+                    <form action="{% url 'products:product_list' %}" method="GET" class="relative">
+                        <input type="text" name="q" value="{{ request.GET.q|default:'' }}"
+                               placeholder="Search for products, brands, or vendors..."
+                               class="w-full bg-gray-100 text-sm text-gray-800 rounded-full pl-11 pr-24 py-2.5 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all border border-transparent">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-gray-400 text-sm"></i>
+                        <button type="submit" class="absolute right-1.5 top-1.5 bottom-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 rounded-full transition shadow-sm">
+                            Search
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Right Nav Items -->
+                <div class="flex items-center space-x-5">
+                    <!-- Cart Indicator -->
+                    <a href="{% url 'cart:detail' %}" class="relative p-2 text-gray-700 hover:text-indigo-600 transition">
+                        <i class="fa-solid fa-cart-shopping text-xl"></i>
+                        {% if cart_item_count > 0 %}
+                            <span class="absolute -top-1 -right-1 bg-rose-500 text-white font-bold text-xs rounded-full h-5 min-w-5 flex items-center justify-center px-1 border-2 border-white">
+                                {{ cart_item_count }}
+                            </span>
+                        {% endif %}
+                    </a>
+
+                    <!-- Auth State -->
+                    {% if user.is_authenticated %}
+                        <div class="relative group">
+                            <button class="flex items-center space-x-2 text-sm font-semibold text-gray-800 hover:text-indigo-600 focus:outline-none">
+                                {% if user.avatar %}
+                                    <img src="{{ user.avatar.url }}" alt="{{ user.username }}" class="w-9 h-9 rounded-full object-cover border border-gray-200">
+                                {% else %}
+                                    <div class="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">
+                                        {{ user.username|slice:":1"|upper }}
+                                    </div>
+                                {% endif %}
+                                <div class="hidden md:block text-left leading-tight">
+                                    <span class="block text-xs text-gray-500">{{ user.get_role_display }}</span>
+                                    <span class="font-bold text-gray-900">{{ user.first_name|default:user.username }}</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-xs text-gray-400"></i>
+                            </button>
+
+                            <!-- Dropdown -->
+                            <div class="absolute right-0 mt-1 w-56 bg-white border border-gray-100 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 py-2">
+                                <div class="px-4 py-2 border-b border-gray-100">
+                                    <p class="text-xs text-gray-500">Signed in as</p>
+                                    <p class="text-sm font-bold text-gray-900 truncate">{{ user.email|default:user.username }}</p>
+                                    <span class="inline-block mt-1 px-2 py-0.5 text-xs font-semibold rounded-md 
+                                        {% if user.role == 'ADMIN' %}bg-purple-100 text-purple-700
+                                        {% elif user.role == 'VENDOR' %}bg-emerald-100 text-emerald-700
+                                        {% else %}bg-blue-100 text-blue-700{% endif %}">
+                                        {{ user.get_role_display }}
+                                    </span>
+                                </div>
+
+                                <!-- Role Dashboard Link -->
+                                <a href="{% url 'dashboards:dashboard_redirect' %}" class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 font-medium">
+                                    <i class="fa-solid fa-gauge text-indigo-500 w-5"></i>
+                                    <span>Dashboard</span>
+                                </a>
+
+                                {% if user.role == 'VENDOR' or user.is_superuser %}
+                                    <a href="{% url 'products:vendor_product_list' %}" class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 font-medium">
+                                        <i class="fa-solid fa-boxes-stacked text-emerald-500 w-5"></i>
+                                        <span>My Products</span>
+                                    </a>
+                                    <a href="{% url 'orders:vendor_order_list' %}" class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 font-medium">
+                                        <i class="fa-solid fa-receipt text-amber-500 w-5"></i>
+                                        <span>Shop Orders</span>
+                                    </a>
+                                    <a href="{% url 'vendors:profile_edit' %}" class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 font-medium">
+                                        <i class="fa-solid fa-store text-blue-500 w-5"></i>
+                                        <span>Store Settings</span>
+                                    </a>
+                                {% endif %}
+
+                                {% if user.role == 'ADMIN' or user.is_superuser %}
+                                    <a href="{% url 'dashboards:admin_vendors' %}" class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 font-medium">
+                                        <i class="fa-solid fa-user-check text-purple-500 w-5"></i>
+                                        <span>Vendor Approvals</span>
+                                    </a>
+                                    <a href="{% url 'orders:admin_order_list' %}" class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 font-medium">
+                                        <i class="fa-solid fa-clipboard-list text-indigo-500 w-5"></i>
+                                        <span>All Orders</span>
+                                    </a>
+                                    <a href="{% url 'products:admin_category_list' %}" class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 font-medium">
+                                        <i class="fa-solid fa-layer-group text-teal-500 w-5"></i>
+                                        <span>Categories</span>
+                                    </a>
+                                {% endif %}
+
+                                <a href="{% url 'orders:customer_order_list' %}" class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 font-medium">
+                                    <i class="fa-solid fa-box-open text-gray-400 w-5"></i>
+                                    <span>My Orders</span>
+                                </a>
+
+                                <a href="{% url 'accounts:profile' %}" class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 font-medium">
+                                    <i class="fa-solid fa-user-gear text-gray-400 w-5"></i>
+                                    <span>Account Profile</span>
+                                </a>
+
+                                <div class="border-t border-gray-100 my-1"></div>
+
+                                <a href="{% url 'accounts:logout' %}" class="flex items-center px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 font-medium">
+                                    <i class="fa-solid fa-arrow-right-from-bracket w-5"></i>
+                                    <span>Log Out</span>
+                                </a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="flex items-center space-x-3">
+                            <a href="{% url 'accounts:login' %}" class="text-sm font-semibold text-gray-700 hover:text-indigo-600 px-3 py-2">
+                                Sign In
+                            </a>
+                            <a href="{% url 'accounts:register' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-sm transition">
+                                Register
+                            </a>
+                        </div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Messages / Alerts -->
+    {% if messages %}
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+            {% for message in messages %}
+                <div class="flex items-center justify-between p-4 mb-3 rounded-xl border shadow-sm transition-all
+                    {% if message.tags == 'error' %}bg-rose-50 border-rose-200 text-rose-800
+                    {% elif message.tags == 'success' %}bg-emerald-50 border-emerald-200 text-emerald-800
+                    {% elif message.tags == 'warning' %}bg-amber-50 border-amber-200 text-amber-800
+                    {% else %}bg-indigo-50 border-indigo-200 text-indigo-800{% endif %}" role="alert">
+                    <div class="flex items-center space-x-3">
+                        {% if message.tags == 'error' %}
+                            <i class="fa-solid fa-circle-exclamation text-rose-600 text-lg"></i>
+                        {% elif message.tags == 'success' %}
+                            <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
+                        {% elif message.tags == 'warning' %}
+                            <i class="fa-solid fa-triangle-exclamation text-amber-600 text-lg"></i>
+                        {% else %}
+                            <i class="fa-solid fa-circle-info text-indigo-600 text-lg"></i>
+                        {% endif %}
+                        <span class="text-sm font-medium">{{ message }}</span>
+                    </div>
+                    <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-gray-700">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content Block -->
+    <main class="flex-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-300 border-t border-gray-800 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <!-- Col 1 -->
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
+                            <i class="fa-solid fa-bag-shopping"></i>
+                        </div>
+                        <span class="text-xl font-black text-white">Bazaar<span class="text-indigo-400">Mart</span></span>
+                    </div>
+                    <p class="text-sm text-gray-400 leading-relaxed">
+                        A modern multi-vendor marketplace connecting authentic merchants with shoppers across Nepal. Supporting instant eSewa & COD transactions.
+                    </p>
+                    <div class="flex space-x-3 pt-2">
+                        <span class="text-xs font-semibold px-2.5 py-1 bg-gray-800 text-gray-300 rounded border border-gray-700">eSewa Verified</span>
+                        <span class="text-xs font-semibold px-2.5 py-1 bg-gray-800 text-gray-300 rounded border border-gray-700">Cash on Delivery</span>
+                    </div>
+                </div>
+
+                <!-- Col 2 -->
+                <div>
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-white mb-4">Quick Links</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="{% url 'products:product_list' %}" class="hover:text-indigo-400 transition">Marketplace Home</a></li>
+                        <li><a href="{% url 'vendors:vendor_list' %}" class="hover:text-indigo-400 transition">Vendor Directory</a></li>
+                        <li><a href="{% url 'cart:detail' %}" class="hover:text-indigo-400 transition">Shopping Cart</a></li>
+                        <li><a href="{% url 'accounts:register_vendor' %}" class="hover:text-indigo-400 transition">Become a Vendor</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 3 -->
+                <div>
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-white mb-4">Customer Care</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="{% url 'orders:customer_order_list' %}" class="hover:text-indigo-400 transition">Track Your Order</a></li>
+                        <li><a href="{% url 'accounts:profile' %}" class="hover:text-indigo-400 transition">Account Profile</a></li>
+                        <li><a href="{% url 'accounts:password_reset' %}" class="hover:text-indigo-400 transition">Password Reset</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 4 -->
+                <div>
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-white mb-4">Payment Methods</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center space-x-3 bg-gray-800 p-3 rounded-lg border border-gray-700">
+                            <span class="w-8 h-8 rounded bg-[#60bb46] text-white flex items-center justify-center font-bold text-xs">eS</span>
+                            <div>
+                                <p class="text-xs font-bold text-white">eSewa ePay v2</p>
+                                <p class="text-[11px] text-gray-400">Instant digital wallet checkout</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3 bg-gray-800 p-3 rounded-lg border border-gray-700">
+                            <span class="w-8 h-8 rounded bg-amber-600 text-white flex items-center justify-center font-bold text-xs"><i class="fa-solid fa-money-bill-wave"></i></span>
+                            <div>
+                                <p class="text-xs font-bold text-white">Cash on Delivery (COD)</p>
+                                <p class="text-[11px] text-gray-400">Pay when your order arrives</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-800 mt-12 pt-6 text-center text-xs text-gray-500 flex flex-col sm:flex-row justify-between items-center">
+                <p>&copy; 2026 BazaarMart Multi-Vendor Platform. Built with Django 6 & Tailwind CSS.</p>
+                <div class="mt-2 sm:mt-0 space-x-4">
+                    <span>Privacy Policy</span>
+                    <span>Terms of Service</span>
+                    <span>Vendor Agreement</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

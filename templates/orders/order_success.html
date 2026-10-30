@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Confirmed - {{ order.order_number }} - BazaarMart{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+    <!-- Confirmation Banner -->
+    <div class="bg-white rounded-3xl border border-gray-200/80 shadow-sm p-8 text-center mb-8">
+        <div class="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fa-solid fa-circle-check text-4xl"></i>
+        </div>
+        <h1 class="text-3xl font-black text-gray-900">Thank You! Your Order is Confirmed</h1>
+        <p class="text-xs text-gray-500 mt-1">We've received your order and notified the respective merchants to prepare fulfillment.</p>
+        
+        <div class="mt-6 inline-flex flex-wrap items-center justify-center gap-3 bg-gray-50 px-6 py-3 rounded-2xl border border-gray-100 text-xs">
+            <span class="text-gray-500">Order ID: <strong class="text-gray-900 font-mono">{{ order.order_number }}</strong></span>
+            <span class="text-gray-300">|</span>
+            <span class="text-gray-500">Payment: 
+                <strong class="font-bold {% if order.payment_status == 'COMPLETED' %}text-emerald-600{% else %}text-amber-600{% endif %}">
+                    {{ order.get_payment_method_display }} ({{ order.get_payment_status_display }})
+                </strong>
+            </span>
+            <span class="text-gray-300">|</span>
+            <span class="text-gray-500">Total: <strong class="text-indigo-600 font-black">NPR {{ order.total_amount }}</strong></span>
+        </div>
+    </div>
+
+    <!-- Details Card -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-sm space-y-2">
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Shipping Details</h3>
+            <p class="font-bold text-sm text-gray-900">{{ order.full_name }}</p>
+            <p class="text-xs text-gray-600">{{ order.shipping_address }}, {{ order.city }}</p>
+            <p class="text-xs text-gray-600"><i class="fa-solid fa-phone mr-1 text-gray-400"></i>{{ order.phone }}</p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-sm space-y-2">
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Payment Information</h3>
+            <p class="font-bold text-sm text-gray-900">{{ order.get_payment_method_display }}</p>
+            <p class="text-xs text-gray-600">Status: <span class="font-bold">{{ order.get_payment_status_display }}</span></p>
+            <p class="text-xs text-gray-500">Order Date: {{ order.created_at|date:"M d, Y, h:i A" }}</p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-sm space-y-3 flex flex-col justify-between">
+            <div>
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Order Actions</h3>
+                <p class="text-xs text-gray-500 mt-1">Download or print your official tax invoice.</p>
+            </div>
+            <a href="{% url 'orders:customer_order_invoice' order_number=order.order_number %}" target="_blank"
+               class="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-xl transition text-center block">
+                <i class="fa-solid fa-print mr-1.5"></i> Print Official Invoice
+            </a>
+        </div>
+    </div>
+
+    <!-- Items Table -->
+    <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden mb-8">
+        <div class="p-5 border-b border-gray-100">
+            <h2 class="text-sm font-black text-gray-900 uppercase tracking-wider">Items in This Order</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-gray-600">
+                <thead class="bg-gray-50 text-gray-700 uppercase tracking-wider text-[11px] border-b border-gray-200 font-extrabold">
+                    <tr>
+                        <th class="py-3 px-5">Item</th>
+                        <th class="py-3 px-4">Merchant</th>
+                        <th class="py-3 px-4">Price</th>
+                        <th class="py-3 px-4">Qty</th>
+                        <th class="py-3 px-5 text-right">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for item in order.items.all %}
+                        <tr>
+                            <td class="py-3.5 px-5 font-bold text-gray-900">{{ item.product_name }}</td>
+                            <td class="py-3.5 px-4 text-indigo-600 font-semibold">{{ item.vendor.store_name }}</td>
+                            <td class="py-3.5 px-4">NPR {{ item.price }}</td>
+                            <td class="py-3.5 px-4 font-bold">{{ item.quantity }}</td>
+                            <td class="py-3.5 px-5 text-right font-black text-gray-900">NPR {{ item.subtotal }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="bg-gray-50 font-bold text-gray-900">
+                    <tr>
+                        <td colspan="4" class="py-4 px-5 text-right uppercase text-xs">Total Amount:</td>
+                        <td class="py-4 px-5 text-right text-base text-indigo-600 font-black">NPR {{ order.total_amount }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <!-- Navigation actions -->
+    <div class="flex justify-between items-center">
+        <a href="{% url 'orders:customer_order_list' %}"
+           class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-xl transition">
+            View All My Orders
+        </a>
+        <a href="{% url 'products:product_list' %}"
+           class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition">
+            Continue Shopping &rarr;
+        </a>
+    </div>
+
+</div>
+{% endblock %}

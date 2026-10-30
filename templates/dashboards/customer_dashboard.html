@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}My Customer Dashboard - BazaarMart{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- Customer Header -->
+    <div class="bg-gradient-to-r from-indigo-800 to-violet-900 rounded-3xl p-6 sm:p-8 text-white shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex items-center space-x-5 text-center md:text-left flex-col md:flex-row">
+            {% if user.avatar %}
+                <img src="{{ user.avatar.url }}" class="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow bg-white">
+            {% else %}
+                <div class="w-16 h-16 rounded-2xl bg-white/20 text-white flex items-center justify-center font-bold text-2xl border-2 border-white">
+                    {{ user.username|slice:":1"|upper }}
+                </div>
+            {% endif %}
+            <div>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white/20 text-indigo-100 mb-1">
+                    Customer Account
+                </span>
+                <h1 class="text-2xl sm:text-3xl font-black">{{ user.get_full_name|default:user.username }}</h1>
+                <p class="text-xs text-indigo-200 mt-1">{{ user.email }}</p>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+            <a href="{% url 'products:product_list' %}"
+               class="px-4 py-2.5 bg-white text-indigo-900 hover:bg-indigo-50 text-xs font-bold rounded-xl shadow transition">
+                <i class="fa-solid fa-bag-shopping mr-1"></i> Shop Marketplace
+            </a>
+            <a href="{% url 'orders:customer_order_list' %}"
+               class="px-4 py-2.5 bg-indigo-700 hover:bg-indigo-600 text-white text-xs font-bold rounded-xl transition">
+                <i class="fa-solid fa-box-open mr-1"></i> Order History
+            </a>
+            <a href="{% url 'accounts:profile' %}"
+               class="px-4 py-2.5 bg-indigo-700 hover:bg-indigo-600 text-white text-xs font-bold rounded-xl transition">
+                <i class="fa-solid fa-user-pen mr-1"></i> Edit Profile
+            </a>
+        </div>
+    </div>
+
+    <!-- Metrics Cards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Orders</p>
+                <p class="text-2xl font-black text-gray-900 mt-1">{{ total_orders }}</p>
+                <a href="{% url 'orders:customer_order_list' %}" class="text-[11px] text-indigo-600 font-bold hover:underline mt-1 inline-block">
+                    View history &rarr;
+                </a>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-bag-shopping"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">In Transit / Active</p>
+                <p class="text-2xl font-black text-amber-600 mt-1">{{ pending_orders }}</p>
+                <span class="text-[11px] text-gray-500 font-medium mt-1 inline-block">Orders being fulfilled</span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-truck-fast"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Delivered</p>
+                <p class="text-2xl font-black text-emerald-600 mt-1">{{ completed_orders }}</p>
+                <span class="text-[11px] text-gray-500 font-medium mt-1 inline-block">Completed successfully</span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Spent</p>
+                <p class="text-2xl font-black text-gray-900 mt-1">NPR {{ total_spent }}</p>
+                <span class="text-[11px] text-gray-500 font-medium mt-1 inline-block">Paid purchases</span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-wallet"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Orders Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200/80 overflow-hidden">
+        <div class="p-5 border-b border-gray-100 flex items-center justify-between">
+            <h2 class="text-sm font-black text-gray-900 uppercase tracking-wider">Recent Orders</h2>
+            <a href="{% url 'orders:customer_order_list' %}" class="text-xs font-bold text-indigo-600 hover:underline">
+                View All &rarr;
+            </a>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-gray-600">
+                <thead class="bg-gray-50 text-gray-700 uppercase tracking-wider text-[11px] border-b border-gray-200 font-extrabold">
+                    <tr>
+                        <th class="py-3.5 px-4">Order #</th>
+                        <th class="py-3.5 px-4">Date</th>
+                        <th class="py-3.5 px-4">Items</th>
+                        <th class="py-3.5 px-4">Total</th>
+                        <th class="py-3.5 px-4">Payment</th>
+                        <th class="py-3.5 px-4">Status</th>
+                        <th class="py-3.5 px-4 text-right">Details</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for ord in recent_orders %}
+                        <tr class="hover:bg-gray-50/70 transition">
+                            <td class="py-3.5 px-4 font-mono font-bold text-gray-900">{{ ord.order_number }}</td>
+                            <td class="py-3.5 px-4 text-gray-500 whitespace-nowrap">{{ ord.created_at|date:"M d, Y" }}</td>
+                            <td class="py-3.5 px-4 font-medium text-gray-700">
+                                {{ ord.items.count }} item{{ ord.items.count|pluralize }}
+                            </td>
+                            <td class="py-3.5 px-4 font-black text-gray-900">NPR {{ ord.total_amount }}</td>
+                            <td class="py-3.5 px-4">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold
+                                    {% if ord.payment_status == 'COMPLETED' %}bg-emerald-100 text-emerald-800
+                                    {% else %}bg-amber-100 text-amber-800{% endif %}">
+                                    {{ ord.get_payment_method_display }}
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold
+                                    {% if ord.order_status == 'DELIVERED' %}bg-emerald-100 text-emerald-800
+                                    {% elif ord.order_status == 'SHIPPED' %}bg-purple-100 text-purple-800
+                                    {% elif ord.order_status == 'PROCESSING' %}bg-blue-100 text-blue-800
+                                    {% elif ord.order_status == 'CANCELLED' %}bg-rose-100 text-rose-800
+                                    {% else %}bg-amber-100 text-amber-800{% endif %}">
+                                    {{ ord.get_order_status_display }}
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-4 text-right">
+                                <a href="{% url 'orders:customer_order_detail' order_number=ord.order_number %}"
+                                   class="font-bold text-indigo-600 hover:underline">
+                                    Track &rarr;
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="py-8 text-center text-gray-400">
+                                No purchases made yet.
+                                <a href="{% url 'products:product_list' %}" class="text-indigo-600 font-bold hover:underline block mt-1">Start shopping now</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

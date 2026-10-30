@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Verified Marketplace Vendors - BazaarMart{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <div class="text-center max-w-2xl mx-auto mb-12">
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 mb-3">
+            <i class="fa-solid fa-store mr-1.5"></i> Merchant Directory
+        </span>
+        <h1 class="text-3xl font-black text-gray-900 tracking-tight">Our Verified Storefronts</h1>
+        <p class="text-xs text-gray-500 mt-2">Discover curated shops across electronics, apparel, lifestyle, and local crafts.</p>
+    </div>
+
+    {% if vendors %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {% for vendor in vendors %}
+                <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition overflow-hidden flex flex-col justify-between">
+                    <div>
+                        <!-- Banner / Cover -->
+                        <div class="h-28 bg-gradient-to-r from-indigo-500 to-purple-600 relative">
+                            {% if vendor.banner %}
+                                <img src="{{ vendor.banner.url }}" alt="{{ vendor.store_name }}" class="w-full h-full object-cover">
+                            {% endif %}
+                            <div class="absolute -bottom-6 left-6">
+                                {% if vendor.logo %}
+                                    <img src="{{ vendor.logo.url }}" alt="{{ vendor.store_name }}"
+                                         class="w-14 h-14 rounded-2xl object-cover border-4 border-white shadow-md bg-white">
+                                {% else %}
+                                    <div class="w-14 h-14 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xl border-4 border-white shadow-md">
+                                        {{ vendor.store_name|slice:":1"|upper }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Info -->
+                        <div class="pt-8 px-6 pb-4">
+                            <h3 class="font-extrabold text-base text-gray-900 flex items-center">
+                                {{ vendor.store_name }}
+                                <i class="fa-solid fa-circle-check text-emerald-500 text-xs ml-1.5" title="Verified Vendor"></i>
+                            </h3>
+                            <p class="text-xs text-gray-500 mt-1 line-clamp-2">
+                                {{ vendor.description|default:"Authentic merchant on BazaarMart marketplace." }}
+                            </p>
+
+                            <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                                <span><i class="fa-solid fa-box-open mr-1 text-indigo-500"></i> {{ vendor.product_count }} Products</span>
+                                {% if vendor.address %}
+                                    <span class="truncate max-w-[120px]"><i class="fa-solid fa-location-dot mr-1 text-rose-500"></i> {{ vendor.address }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer Link -->
+                    <div class="px-6 pb-6">
+                        <a href="{% url 'vendors:vendor_store' slug=vendor.slug %}"
+                           class="w-full py-2.5 bg-gray-50 hover:bg-indigo-600 hover:text-white text-indigo-600 text-xs font-bold rounded-xl transition text-center block border border-indigo-100 hover:border-transparent">
+                            Visit Storefront &rarr;
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="bg-white rounded-2xl border border-gray-200 p-12 text-center max-w-md mx-auto">
+            <i class="fa-solid fa-shop text-4xl text-gray-300 mb-3"></i>
+            <h3 class="text-base font-bold text-gray-900">No approved vendors yet</h3>
+            <p class="text-xs text-gray-500 mt-1 mb-6">Be the first merchant to open an online store on BazaarMart!</p>
+            <a href="{% url 'accounts:register_vendor' %}" class="px-5 py-2.5 bg-indigo-600 text-white font-bold text-xs rounded-xl shadow-sm">
+                Register as a Vendor
+            </a>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

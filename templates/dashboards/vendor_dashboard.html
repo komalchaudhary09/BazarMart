@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ vendor.store_name }} - Vendor Dashboard - BazaarMart{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- Store Header -->
+    <div class="bg-gradient-to-r from-emerald-800 to-teal-900 rounded-3xl p-6 sm:p-8 text-white shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex items-center space-x-5 text-center md:text-left flex-col md:flex-row">
+            {% if vendor.logo %}
+                <img src="{{ vendor.logo.url }}" class="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow bg-white">
+            {% else %}
+                <div class="w-16 h-16 rounded-2xl bg-white/20 text-white flex items-center justify-center font-bold text-2xl border-2 border-white">
+                    {{ vendor.store_name|slice:":1"|upper }}
+                </div>
+            {% endif %}
+            <div>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white/20 text-emerald-100 mb-1">
+                    <i class="fa-solid fa-circle-check mr-1.5"></i> Verified Active Merchant
+                </span>
+                <h1 class="text-2xl sm:text-3xl font-black">{{ vendor.store_name }}</h1>
+                <p class="text-xs text-emerald-200 mt-1">Platform Commission Rate: {{ vendor.commission_rate }}%</p>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+            <a href="{% url 'products:vendor_product_create' %}"
+               class="px-4 py-2.5 bg-white text-emerald-900 hover:bg-emerald-50 text-xs font-bold rounded-xl shadow transition">
+                <i class="fa-solid fa-plus mr-1"></i> Add Product
+            </a>
+            <a href="{% url 'vendors:vendor_store' slug=vendor.slug %}" target="_blank"
+               class="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl transition">
+                <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Public Shop
+            </a>
+            <a href="{% url 'vendors:profile_edit' %}"
+               class="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl transition">
+                <i class="fa-solid fa-gear mr-1"></i> Settings
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Metric Cards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Store Sales</p>
+                <p class="text-2xl font-black text-gray-900 mt-1">NPR {{ total_sales }}</p>
+                <span class="text-[11px] text-emerald-600 font-semibold mt-1 inline-block">Verified Income</span>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-coins"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Units Sold</p>
+                <p class="text-2xl font-black text-gray-900 mt-1">{{ total_sold_units }}</p>
+                <a href="{% url 'orders:vendor_order_list' %}" class="text-[11px] text-indigo-600 font-bold hover:underline mt-1 inline-block">
+                    View fulfillment orders &rarr;
+                </a>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-dolly"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Catalog Products</p>
+                <p class="text-2xl font-black text-gray-900 mt-1">{{ total_products }}</p>
+                <a href="{% url 'products:vendor_product_list' %}" class="text-[11px] text-indigo-600 font-bold hover:underline mt-1 inline-block">
+                    Manage catalog &rarr;
+                </a>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-boxes-stacked"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Low Stock Items</p>
+                <p class="text-2xl font-black {% if low_stock_count > 0 %}text-rose-600{% else %}text-gray-900{% endif %} mt-1">
+                    {{ low_stock_count }}
+                </p>
+                {% if low_stock_count > 0 %}
+                    <span class="text-[11px] text-rose-600 font-bold mt-1 inline-block">Restock needed</span>
+                {% else %}
+                    <span class="text-[11px] text-emerald-600 font-semibold mt-1 inline-block">Healthy inventory</span>
+                {% endif %}
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-cubes-stacked"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Fulfillment Orders Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200/80 overflow-hidden">
+        <div class="p-5 border-b border-gray-100 flex items-center justify-between">
+            <h2 class="text-sm font-black text-gray-900 uppercase tracking-wider">Recent Orders for My Shop</h2>
+            <a href="{% url 'orders:vendor_order_list' %}" class="text-xs font-bold text-indigo-600 hover:underline">
+                View All Orders &rarr;
+            </a>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-gray-600">
+                <thead class="bg-gray-50 text-gray-700 uppercase tracking-wider text-[11px] border-b border-gray-200 font-extrabold">
+                    <tr>
+                        <th class="py-3.5 px-4">Order #</th>
+                        <th class="py-3.5 px-4">Product</th>
+                        <th class="py-3.5 px-4">Qty</th>
+                        <th class="py-3.5 px-4">Subtotal</th>
+                        <th class="py-3.5 px-4">Payment</th>
+                        <th class="py-3.5 px-4">Fulfillment Status</th>
+                        <th class="py-3.5 px-4 text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for item in recent_items %}
+                        <tr class="hover:bg-gray-50/70 transition">
+                            <td class="py-3.5 px-4 font-mono font-bold text-gray-900">{{ item.order.order_number }}</td>
+                            <td class="py-3.5 px-4 font-bold text-gray-900">{{ item.product_name }}</td>
+                            <td class="py-3.5 px-4 font-bold">{{ item.quantity }}</td>
+                            <td class="py-3.5 px-4 font-black text-gray-900">NPR {{ item.subtotal }}</td>
+                            <td class="py-3.5 px-4">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold
+                                    {% if item.order.payment_status == 'COMPLETED' %}bg-emerald-100 text-emerald-800
+                                    {% else %}bg-amber-100 text-amber-800{% endif %}">
+                                    {{ item.order.get_payment_method_display }}
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold
+                                    {% if item.status == 'DELIVERED' %}bg-emerald-100 text-emerald-800
+                                    {% elif item.status == 'SHIPPED' %}bg-purple-100 text-purple-800
+                                    {% elif item.status == 'PROCESSING' %}bg-blue-100 text-blue-800
+                                    {% else %}bg-amber-100 text-amber-800{% endif %}">
+                                    {{ item.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-4 text-right">
+                                <a href="{% url 'orders:vendor_order_list' %}" class="text-xs font-bold text-indigo-600 hover:underline">
+                                    Update Status &rarr;
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="py-8 text-center text-gray-400">No orders received yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

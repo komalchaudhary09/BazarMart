@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Categories - Admin Portal - BazaarMart{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <a href="{% url 'dashboards:admin_dashboard' %}" class="text-xs text-indigo-600 font-bold hover:underline">&larr; Admin Dashboard</a>
+            <h1 class="text-2xl font-black text-gray-900 mt-1">Product Categories</h1>
+            <p class="text-xs text-gray-500">Manage catalog categories and taxonomy for the marketplace.</p>
+        </div>
+        <a href="{% url 'products:admin_category_create' %}"
+           class="inline-flex items-center space-x-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition">
+            <i class="fa-solid fa-plus"></i>
+            <span>Add New Category</span>
+        </a>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200/80 overflow-hidden">
+        <table class="w-full text-left text-xs text-gray-600">
+            <thead class="bg-gray-50 text-gray-700 uppercase tracking-wider text-[11px] border-b border-gray-200 font-extrabold">
+                <tr>
+                    <th class="py-3.5 px-4">Category</th>
+                    <th class="py-3.5 px-4">Slug</th>
+                    <th class="py-3.5 px-4">Description</th>
+                    <th class="py-3.5 px-4">Status</th>
+                    <th class="py-3.5 px-4 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for cat in categories %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="py-3.5 px-4">
+                            <div class="flex items-center space-x-3">
+                                {% if cat.image %}
+                                    <img src="{{ cat.image.url }}" class="w-8 h-8 rounded-lg object-cover">
+                                {% else %}
+                                    <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs">
+                                        <i class="fa-solid fa-tag"></i>
+                                    </div>
+                                {% endif %}
+                                <span class="font-bold text-gray-900">{{ cat.name }}</span>
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-4 font-mono text-gray-400 text-[11px]">{{ cat.slug }}</td>
+                        <td class="py-3.5 px-4 text-gray-500 max-w-xs truncate">{{ cat.description|default:"-" }}</td>
+                        <td class="py-3.5 px-4">
+                            {% if cat.is_active %}
+                                <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]">Active</span>
+                            {% else %}
+                                <span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-bold text-[10px]">Hidden</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4 text-right space-x-2">
+                            <a href="{% url 'products:admin_category_update' pk=cat.pk %}" class="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg text-xs">
+                                Edit
+                            </a>
+                            <a href="{% url 'products:admin_category_delete' pk=cat.pk %}" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-lg text-xs">
+                                Delete
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="py-8 text-center text-gray-400">No categories created yet.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+{% endblock %}

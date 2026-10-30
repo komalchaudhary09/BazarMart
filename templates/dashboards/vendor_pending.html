@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Application Under Review - BazaarMart Vendor Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto my-16 px-4">
+    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 sm:p-12 text-center space-y-6">
+        
+        {% if vendor.status == 'PENDING' %}
+            <div class="w-20 h-20 bg-amber-50 text-amber-600 rounded-3xl flex items-center justify-center mx-auto">
+                <i class="fa-solid fa-hourglass-half text-3xl animate-pulse"></i>
+            </div>
+
+            <div>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 mb-3">
+                    Application Pending Admin Review
+                </span>
+                <h1 class="text-2xl font-black text-gray-900">Your Store Application is Under Review</h1>
+                <p class="text-xs text-gray-500 mt-2 max-w-md mx-auto leading-relaxed">
+                    Thank you for applying to sell on BazaarMart. Our team reviews every merchant application to maintain high marketplace standards.
+                </p>
+            </div>
+
+            <div class="bg-gray-50 rounded-2xl p-5 text-left text-xs text-gray-600 space-y-3 border border-gray-100">
+                <div class="flex justify-between border-b border-gray-200/60 pb-2">
+                    <span class="text-gray-400">Store Name:</span>
+                    <span class="font-bold text-gray-900">{{ vendor.store_name }}</span>
+                </div>
+                <div class="flex justify-between border-b border-gray-200/60 pb-2">
+                    <span class="text-gray-400">Registered By:</span>
+                    <span class="font-bold text-gray-900">{{ vendor.user.username }} ({{ vendor.user.email }})</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Submission Date:</span>
+                    <span class="font-bold text-gray-900">{{ vendor.created_at|date:"M d, Y" }}</span>
+                </div>
+            </div>
+
+            <p class="text-xs text-gray-400">
+                Once an administrator approves your store, you will be able to add products, manage inventory, and receive payments.
+            </p>
+
+        {% elif vendor.status == 'REJECTED' %}
+            <div class="w-20 h-20 bg-rose-50 text-rose-600 rounded-3xl flex items-center justify-center mx-auto">
+                <i class="fa-solid fa-circle-xmark text-3xl"></i>
+            </div>
+
+            <div>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 mb-3">
+                    Application Rejected
+                </span>
+                <h1 class="text-2xl font-black text-gray-900">Store Application Not Approved</h1>
+                <p class="text-xs text-gray-500 mt-2">
+                    Your vendor store application could not be approved at this time.
+                </p>
+            </div>
+
+            {% if vendor.rejection_reason %}
+                <div class="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-800 text-left">
+                    <p class="font-bold mb-1">Reason provided by administrator:</p>
+                    <p>{{ vendor.rejection_reason }}</p>
+                </div>
+            {% endif %}
+        {% endif %}
+
+        <div class="pt-4 border-t border-gray-100 flex justify-center space-x-3">
+            <a href="{% url 'products:product_list' %}"
+               class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-xl transition">
+                Browse Marketplace
+            </a>
+            <a href="{% url 'accounts:profile' %}"
+               class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition shadow">
+                View Account Profile
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

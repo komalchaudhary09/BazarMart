@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}All Platform Orders - Admin - BazaarMart{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <a href="{% url 'dashboards:admin_dashboard' %}" class="text-xs text-indigo-600 font-bold hover:underline">&larr; Admin Dashboard</a>
+            <h1 class="text-2xl font-black text-gray-900 mt-1">Platform Order Monitoring</h1>
+            <p class="text-xs text-gray-500">Monitor all transactions, payment states, and vendor deliveries.</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-sm mb-6 flex flex-wrap gap-4 items-center">
+        <form method="GET" class="flex flex-wrap gap-3 items-center text-xs">
+            <div>
+                <label class="font-bold text-gray-600 mr-1">Status:</label>
+                <select name="status" class="border border-gray-200 rounded-lg px-2.5 py-1.5 bg-gray-50">
+                    <option value="">All Statuses</option>
+                    <option value="PENDING" {% if selected_status == 'PENDING' %}selected{% endif %}>Pending</option>
+                    <option value="PROCESSING" {% if selected_status == 'PROCESSING' %}selected{% endif %}>Processing</option>
+                    <option value="SHIPPED" {% if selected_status == 'SHIPPED' %}selected{% endif %}>Shipped</option>
+                    <option value="DELIVERED" {% if selected_status == 'DELIVERED' %}selected{% endif %}>Delivered</option>
+                    <option value="CANCELLED" {% if selected_status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="font-bold text-gray-600 mr-1">Payment Method:</label>
+                <select name="payment_method" class="border border-gray-200 rounded-lg px-2.5 py-1.5 bg-gray-50">
+                    <option value="">All Gateways</option>
+                    <option value="ESEWA" {% if selected_payment_method == 'ESEWA' %}selected{% endif %}>eSewa</option>
+                    <option value="COD" {% if selected_payment_method == 'COD' %}selected{% endif %}>Cash on Delivery</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="font-bold text-gray-600 mr-1">Payment Status:</label>
+                <select name="payment_status" class="border border-gray-200 rounded-lg px-2.5 py-1.5 bg-gray-50">
+                    <option value="">All States</option>
+                    <option value="COMPLETED" {% if selected_payment_status == 'COMPLETED' %}selected{% endif %}>Completed</option>
+                    <option value="PENDING" {% if selected_payment_status == 'PENDING' %}selected{% endif %}>Pending</option>
+                    <option value="FAILED" {% if selected_payment_status == 'FAILED' %}selected{% endif %}>Failed</option>
+                </select>
+            </div>
+
+            <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition">
+                Filter
+            </button>
+            {% if selected_status or selected_payment_method or selected_payment_status %}
+                <a href="{% url 'orders:admin_order_list' %}" class="text-rose-600 hover:underline font-semibold ml-2">Reset</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200/80 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-gray-600">
+                <thead class="bg-gray-50 text-gray-700 uppercase tracking-wider text-[11px] border-b border-gray-200 font-extrabold">
+                    <tr>
+                        <th class="py-3.5 px-4">Order #</th>
+                        <th class="py-3.5 px-4">Customer</th>
+                        <th class="py-3.5 px-4">Date</th>
+                        <th class="py-3.5 px-4">Total</th>
+                        <th class="py-3.5 px-4">Method</th>
+                        <th class="py-3.5 px-4">Payment</th>
+                        <th class="py-3.5 px-4">Order Status</th>
+                        <th class="py-3.5 px-4 text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for order in orders %}
+                        <tr class="hover:bg-gray-50/70 transition">
+                            <td class="py-3.5 px-4 font-mono font-bold text-gray-900">
+                                <a href="{% url 'orders:admin_order_detail' order_number=order.order_number %}" class="hover:text-indigo-600">
+                                    {{ order.order_number }}
+                                </a>
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <span class="font-bold text-gray-900 block">{{ order.full_name }}</span>
+                                <span class="text-[10px] text-gray-400">{{ order.email }}</span>
+                            </td>
+                            <td class="py-3.5 px-4 text-gray-500 whitespace-nowrap">
+                                {{ order.created_at|date:"M d, Y" }}
+                            </td>
+                            <td class="py-3.5 px-4 font-black text-gray-900">
+                                NPR {{ order.total_amount }}
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <span class="font-bold text-gray-800">{{ order.get_payment_method_display }}</span>
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold
+                                    {% if order.payment_status == 'COMPLETED' %}bg-emerald-100 text-emerald-800
+                                    {% elif order.payment_status == 'FAILED' %}bg-rose-100 text-rose-800
+                                    {% else %}bg-amber-100 text-amber-800{% endif %}">
+                                    {{ order.get_payment_status_display }}
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold
+                                    {% if order.order_status == 'DELIVERED' %}bg-emerald-100 text-emerald-800
+                                    {% elif order.order_status == 'SHIPPED' %}bg-purple-100 text-purple-800
+                                    {% elif order.order_status == 'PROCESSING' %}bg-blue-100 text-blue-800
+                                    {% elif order.order_status == 'CANCELLED' %}bg-rose-100 text-rose-800
+                                    {% else %}bg-amber-100 text-amber-800{% endif %}">
+                                    {{ order.get_order_status_display }}
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-4 text-right">
+                                <a href="{% url 'orders:admin_order_detail' order_number=order.order_number %}"
+                                   class="px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold rounded-lg text-xs">
+                                    Inspect &rarr;
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="8" class="py-8 text-center text-gray-400">No platform orders found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if orders.has_other_pages %}
+            <div class="p-4 border-t border-gray-100 flex items-center justify-between">
+                <span class="text-xs text-gray-500">Page {{ orders.number }} of {{ orders.paginator.num_pages }}</span>
+                <div class="space-x-1">
+                    {% if orders.has_previous %}
+                        <a href="?page={{ orders.previous_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}" class="px-3 py-1.5 border rounded-lg text-xs font-semibold hover:bg-gray-50">Previous</a>
+                    {% endif %}
+                    {% if orders.has_next %}
+                        <a href="?page={{ orders.next_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}" class="px-3 py-1.5 border rounded-lg text-xs font-semibold hover:bg-gray-50">Next</a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
